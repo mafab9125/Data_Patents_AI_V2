@@ -5,9 +5,8 @@
 
 const MODEL_ID = "BAAI/bge-small-en-v1.5";
 
-// En Vercel, el directorio /api/ se convierte automáticamente en endpoints.
-// Usamos /api/hf que conectará con nuestro hf.js
-const API_URL = "/api/hf";
+// Usamos un nombre de ruta único para evitar cachés viejas en Vercel
+const API_URL = "/api/hf-proxy";
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2

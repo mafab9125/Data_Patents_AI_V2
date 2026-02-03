@@ -1,7 +1,7 @@
 {
     "rewrites": [
         {
-            "source": "/api/hf",
+            "source": "/api/hf-proxy",
             "destination": "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5"
         }
     ]
