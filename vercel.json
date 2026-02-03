@@ -1,8 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/api/hf/:path*",
-            "destination": "https://api-inference.huggingface.co/:path*"
+            "source": "/api/hf",
+            "destination": "https://api-inference.huggingface.co/models/BAAI/bge-small-en-v1.5"
         }
     ]
 }
