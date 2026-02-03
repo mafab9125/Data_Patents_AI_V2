@@ -1,0 +1,92 @@
+[
+  {
+    "id": "US-2023001-A1",
+    "title": "Solar Panel Self-Cleaning Mechanism",
+    "abstract": "A system for automatically cleaning solar panels using electrostatic repulsion to remove dust and debris without water, enhancing efficiency in arid environments.",
+    "assignee": "SolarTech Innovations",
+    "date": "2023-05-12",
+    "tags": ["Energy", "Solar", "Hardware"],
+    "status": "Active"
+  },
+  {
+    "id": "WO-2022098-A2",
+    "title": "Autonomous Drone Battery Swapping Station",
+    "abstract": "An automated landing pad and robotic arm system capable of swapping depleted drone batteries with fully charged ones in under 3 minutes, enabling continuous surveillance operations.",
+    "assignee": "AeroDynamics Corp",
+    "date": "2022-11-20",
+    "tags": ["Robotics", "Drones", "Automation"],
+    "status": "Granted"
+  },
+  {
+    "id": "EP-1029384-B1",
+    "title": "Biodegradable Plastic Substitute from Algae",
+    "abstract": "Method for producing bioplastics using processed marine algae, resulting in a material that decomposes within 60 days in compost environments.",
+    "assignee": "GreenMaterials Ltd",
+    "date": "2021-08-15",
+    "tags": ["Materials", "Eco-friendly", "Chemistry"],
+    "status": "Expired"
+  },
+  {
+    "id": "US-9988776-B2",
+    "title": "Neural Interface for Prosthetic Limb Control",
+    "abstract": "A non-invasive brain-computer interface (BCI) decoding motor cortex signals to control robotic prosthetic limbs with high precision and haptic feedback.",
+    "assignee": "NeuroBionics Inc",
+    "date": "2023-01-30",
+    "tags": ["Biotech", "AI", "Medical"],
+    "status": "Active"
+  },
+  {
+    "id": "JP-2023555-A",
+    "title": "Solid State Battery Electrolyte Composition",
+    "abstract": "A novel ceramic-based solid electrolyte offering higher conductivity and stability for lithium-ion batteries, reducing fire risk in electric vehicles.",
+    "assignee": "ElectroPower Japan",
+    "date": "2023-07-04",
+    "tags": ["Energy", "Batteries", "Automotive"],
+    "status": "Pending"
+  },
+  {
+    "id": "CN-1122334-A",
+    "title": "5G Signal Booster for Dense Urban Areas",
+    "abstract": "Compact beam-forming antenna array designed to improve 5G mmWave penetration in buildings and dense city infrastructure.",
+    "assignee": "CommsGiant",
+    "date": "2022-03-10",
+    "tags": ["Telecom", "5G", "Network"],
+    "status": "Active"
+  },
+  {
+    "id": "US-2024111-A1",
+    "title": "AI-Driven Crop Yield Prediction Model",
+    "abstract": "Machine learning system analyzing satellite imagery and soil sensor data to predict crop yields and recommend optimal harvest times.",
+    "assignee": "AgriSmarter",
+    "date": "2024-02-01",
+    "tags": ["AI", "Agriculture", "Software"],
+    "status": "Application"
+  },
+  {
+    "id": "WO-2021777-A1",
+    "title": "Water Purification using Graphene Oxide Membranes",
+    "abstract": "High-throughput filtration system using multi-layered graphene oxide to remove heavy metals and bacteria from brackish water.",
+    "assignee": "CleanWater Global",
+    "date": "2021-05-22",
+    "tags": ["Cleantech", "Water", "Materials"],
+    "status": "Active"
+  },
+  {
+    "id": "KR-2023999-A",
+    "title": "Foldable OLED Display Hinge Mechanism",
+    "abstract": "Mechanical hinge design allowing foldable screens to close completely flat without creasing the display panel, durable for 200,000 folds.",
+    "assignee": "ScreenFlex Korea",
+    "date": "2023-09-18",
+    "tags": ["Display", "Hardware", "Consumer Electronics"],
+    "status": "Active"
+  },
+  {
+    "id": "US-8887771-B1",
+    "title": "Quantum Encryption Key Distribution System",
+    "abstract": "Fiber-optic network hardware for distributing quantum cryptographic keys using entangled photon pairs to ensure unbreakable communication security.",
+    "assignee": "QuantumSecure",
+    "date": "2020-12-05",
+    "tags": ["Quantum", "Security", "Telecom"],
+    "status": "Granted"
+  }
+]
