@@ -9,7 +9,7 @@ export default defineConfig({
         open: true,
         proxy: {
             '/api/hf': {
-                target: 'https://router.huggingface.co/models/BAAI/bge-small-en-v1.5',
+                target: 'https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api\/hf/, ''),
                 secure: false
