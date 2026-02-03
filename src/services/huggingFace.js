@@ -5,8 +5,8 @@
 
 const MODEL_ID = "BAAI/bge-small-en-v1.5";
 
-// Usamos un nombre de ruta único para evitar cachés viejas en Vercel
-const API_URL = "/api/hf-proxy";
+// Usamos un nombre de ruta que NO empiece por /api para evitar que Vercel se confunda
+const API_URL = "/hf-infer";
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2

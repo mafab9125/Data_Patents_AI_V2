@@ -8,10 +8,10 @@ export default defineConfig({
         port: 5173,
         open: true,
         proxy: {
-            '/api/hf-proxy': {
-                target: 'https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5',
+            '/hf-infer': {
+                target: 'https://router.huggingface.co/models/BAAI/bge-small-en-v1.5',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api\/hf-proxy/, ''),
+                rewrite: (path) => path.replace(/^\/hf-infer/, ''),
                 secure: false
             }
         }
