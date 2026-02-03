@@ -9,10 +9,10 @@ export default defineConfig({
         open: true,
         proxy: {
             '/api/hf': {
-                target: 'https://router.huggingface.co',
+                target: 'https://api-inference.huggingface.co',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api\/hf/, ''),
-                secure: false // Acepta certificados autofirmados si fuera necesario, útil en dev
+                secure: false
             }
         }
     }

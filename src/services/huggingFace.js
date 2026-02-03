@@ -5,13 +5,9 @@
 
 const MODEL_ID = "BAAI/bge-small-en-v1.5";
 
-// Determinamos si estamos en desarrollo o producción
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-// En local usamos el proxy, en producción (Vercel) llamamos directo a HF
-const API_URL = isDev
-    ? `/api/hf/hf-inference/models/${MODEL_ID}`
-    : `https://api-inference.huggingface.co/models/${MODEL_ID}`;
+// Usamos una ruta relativa que será manejada por el proxy (Vite en local, Vercel en prod)
+// Esto evita problemas de CORS y 404
+const API_URL = `/api/hf/models/${MODEL_ID}`;
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2
