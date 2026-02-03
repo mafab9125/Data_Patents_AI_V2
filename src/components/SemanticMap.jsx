@@ -2,7 +2,9 @@ export const SemanticMap = ({ patents }) => {
     // Coordenadas simuladas deterministas basadas en ID y Tags
     const getCoords = (p) => {
         const seed = p.id.charCodeAt(3) + (p.id.length * 5);
-        const tag = (p.tags[0] || "").toLowerCase();
+        // Safe access to tags
+        const tags = p.tags || [];
+        const tag = (tags[0] || "").toLowerCase();
 
         let x = 50, y = 50;
         // Clustering simple por temática
@@ -44,8 +46,11 @@ export const SemanticMap = ({ patents }) => {
 
                 {patents.map(p => {
                     const { x, y } = getCoords(p);
-                    const isBio = ['bio', 'médico', 'salud', 'vacuna'].some(t => (p.tags[0] + p.title).toLowerCase().includes(t));
-                    const isTech = ['tech', 'ia', 'datos', 'cyber', 'dron'].some(t => (p.tags[0] + p.title).toLowerCase().includes(t));
+                    // Safe access to tags again
+                    const tags = p.tags || [];
+                    const firstTag = tags[0] || "";
+                    const isBio = ['bio', 'médico', 'salud', 'vacuna'].some(t => (firstTag + p.title).toLowerCase().includes(t));
+                    const isTech = ['tech', 'ia', 'datos', 'cyber', 'dron'].some(t => (firstTag + p.title).toLowerCase().includes(t));
 
                     let colorClass = 'bg-emerald-500 shadow-emerald-500/50';
                     if (isBio) colorClass = 'bg-brand-secondary shadow-brand-secondary/50';
