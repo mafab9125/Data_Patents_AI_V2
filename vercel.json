@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/api/hf",
-            "destination": "https://api-inference.huggingface.co/models/BAAI/bge-small-en-v1.5"
+            "destination": "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5"
         }
     ]
 }
