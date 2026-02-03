@@ -34,12 +34,19 @@ export const getEmbeddings = async (text, token) => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            // Manejo específico para modelo cargando (503)
+            const errorText = await response.text();
+            let errorMsg = response.statusText;
+            try {
+                const errorData = JSON.parse(errorText);
+                errorMsg = errorData.error || errorData.message || errorMsg;
+            } catch (e) {
+                errorMsg = errorText || errorMsg;
+            }
+
             if (response.status === 503) {
                 throw new Error("El modelo se está cargando (Cold Start). Por favor intenta de nuevo en unos segundos.");
             }
-            throw new Error(`Error API (${response.status}): ${errorData.error || response.statusText}`);
+            throw new Error(`Error API (${response.status}): ${errorMsg}`);
         }
 
         const result = await response.json();
