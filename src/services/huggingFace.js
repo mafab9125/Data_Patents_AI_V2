@@ -71,9 +71,9 @@ export const validateToken = async (token) => {
     try {
         // Intentamos una llamada dummy muy corta
         await getEmbeddings("test", token);
-        return true;
+        return { valid: true };
     } catch (error) {
         console.warn("Token validation failed:", error.message);
-        return false;
+        return { valid: false, error: error.message };
     }
 };

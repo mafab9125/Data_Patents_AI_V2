@@ -25,11 +25,11 @@ export const TokenModal = () => {
             return;
         }
 
-        const valid = await validateToken(inputToken);
-        if (valid) {
-            updateToken(inputToken);
+        const result = await validateToken(inputToken.trim());
+        if (result.valid) {
+            updateToken(inputToken.trim());
         } else {
-            setError('Token inválido o expirado. Verifica tus permisos de Hugging Face.');
+            setError(result.error || 'Token inválido o expirado. Verifica tus permisos.');
         }
         setValidating(false);
     };

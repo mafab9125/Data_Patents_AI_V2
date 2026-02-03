@@ -18,8 +18,8 @@ export const TokenProvider = ({ children }) => {
             // Si ya validamos recientemente, podríamos saltar esto, 
             // pero por seguridad validamos al montar si hay token
             setIsValidating(true);
-            const valid = await validateToken(token);
-            setIsValid(valid);
+            const result = await validateToken(token);
+            setIsValid(result.valid);
             setIsValidating(false);
 
             if (valid) {
