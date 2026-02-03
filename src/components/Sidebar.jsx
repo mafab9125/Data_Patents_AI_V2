@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import clsx from 'clsx'; // Asegúrate de instalar clsx si no está
 import { twMerge } from 'tailwind-merge';
 
-export const Sidebar = ({ onNewSearch, activeView, setActiveView }) => {
+export const Sidebar = ({ onNewSearch, activeView, setActiveView, onSettingsClick, onReferencesClick }) => {
 
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: 'layout' },
@@ -26,7 +26,6 @@ export const Sidebar = ({ onNewSearch, activeView, setActiveView }) => {
                     <h1 className="text-xl font-bold tracking-tight text-dark-text leading-none">
                         DATA_PATENTS
                     </h1>
-                    <span className="text-xs font-semibold text-brand-primary tracking-widest">AHQ INTELLIGENCE</span>
                 </div>
             </motion.div>
 
@@ -76,14 +75,24 @@ export const Sidebar = ({ onNewSearch, activeView, setActiveView }) => {
                 })}
             </nav>
 
-            {/* Footer / Settings */}
-            <div className="mt-auto pt-6 border-t border-dark-border">
+            {/* Footer / Settings & References */}
+            <div className="mt-auto pt-6 border-t border-dark-border flex items-center gap-2">
                 <button
-                    onClick={() => window.location.reload()}
-                    className="flex items-center gap-3 text-dark-muted hover:text-white transition-colors w-full p-2 rounded-lg hover:bg-white/5"
+                    onClick={() => onSettingsClick && onSettingsClick()}
+                    className="p-2.5 text-dark-muted hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                    title="Configuración"
                 >
-                    <Icon name="settings" size={18} />
-                    <span className="text-sm font-medium">Configuración</span>
+                    <Icon name="settings" size={20} />
+                </button>
+
+                <div className="w-px h-6 bg-dark-border mx-1" />
+
+                <button
+                    onClick={() => onReferencesClick && onReferencesClick()}
+                    className="flex-1 flex items-center gap-3 p-2.5 text-dark-muted hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                >
+                    <Icon name="book" size={18} />
+                    <span className="text-sm font-medium">Referencias</span>
                 </button>
             </div>
         </aside>

@@ -7,8 +7,10 @@ const getPatentUrl = (id) => {
     return `https://patents.google.com/patent/${cleanId}/en`;
 };
 
-export const PatentCard = ({ patent, score }) => {
-    const country = getCountryFromId(patent.id);
+export const PatentCard = ({ patent, score, isSelected, onToggleSelection }) => {
+    // Prefer explicit country code, fallback to parsing ID
+    const countryParam = patent.country || patent.id;
+    const country = getCountryFromId(countryParam);
     const hasScore = score !== undefined && score > 0;
 
     return (
@@ -18,29 +20,43 @@ export const PatentCard = ({ patent, score }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)" }}
-            className="bg-dark-card/50 backdrop-blur-md border border-dark-border rounded-xl p-5 relative group overflow-hidden"
+            className={clsx(
+                "bg-dark-card/50 backdrop-blur-md border rounded-xl p-5 relative group overflow-hidden transition-all",
+                isSelected ? "border-brand-primary shadow-[0_0_20px_rgba(99,102,241,0.3)]" : "border-dark-border"
+            )}
         >
             {/* Gradient Glow on Hover */}
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/5 to-brand-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
-                    <div className="flex flex-wrap gap-2">
-                        {/* Status Badge */}
-                        <span className={clsx(
-                            "px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border",
-                            patent.status === 'Activo' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                                patent.status === 'Pendiente' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                    "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                        )}>
-                            {patent.status}
-                        </span>
+                    {/* Checkbox for selection */}
+                    <div className="flex items-start gap-3">
+                        <label className="flex items-center cursor-pointer mt-1">
+                            <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => onToggleSelection(patent.id)}
+                                className="w-5 h-5 rounded border-2 border-brand-primary/30 bg-dark-bg/50 checked:bg-brand-primary checked:border-brand-primary focus:ring-2 focus:ring-brand-primary/50 cursor-pointer transition-all"
+                            />
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            {/* Status Badge */}
+                            <span className={clsx(
+                                "px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border",
+                                patent.status === 'Activo' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                                    patent.status === 'Pendiente' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                        "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                            )}>
+                                {patent.status}
+                            </span>
 
-                        {/* Country Badge */}
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-dark-text" title={`País: ${country.name}`}>
-                            <span className="text-sm">{country.flag}</span>
-                            <span className="hidden sm:inline opacity-80">{country.name}</span>
-                        </span>
+                            {/* Country Badge */}
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-dark-text" title={`País: ${country.name}`}>
+                                <span className="text-sm">{country.flag}</span>
+                                <span className="hidden sm:inline opacity-80">{country.name}</span>
+                            </span>
+                        </div>
                     </div>
 
                     {/* Similarity Score */}

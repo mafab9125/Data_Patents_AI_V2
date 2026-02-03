@@ -4,15 +4,13 @@ import { Icon } from './Icon';
 import { useToken } from '../context/TokenContext';
 import { validateToken } from '../services/huggingFace';
 
-export const TokenModal = () => {
-    const { updateToken, isValid } = useToken();
+export const TokenModal = ({ isOpen, onClose }) => {
+    const { updateToken } = useToken();
     const [inputToken, setInputToken] = useState('');
     const [validating, setValidating] = useState(false);
     const [error, setError] = useState('');
 
-    // Si ya es válido, no mostrar nada (o manejar visibilidad desde padre)
-    // Pero aquí asumiremos que este componente se monta si NO es válido.
-    if (isValid) return null;
+    if (!isOpen) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,6 +26,7 @@ export const TokenModal = () => {
         const result = await validateToken(inputToken.trim());
         if (result.valid) {
             updateToken(inputToken.trim());
+            onClose(); // Close on success
         } else {
             setError(result.error || 'Token inválido o expirado. Verifica tus permisos.');
         }
@@ -41,6 +40,12 @@ export const TokenModal = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-dark-card border border-dark-border w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden"
             >
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-dark-muted hover:text-white transition-colors"
+                >
+                    <Icon name="x" size={24} />
+                </button>
                 {/* Decorative background glow */}
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-brand-primary/20 blur-3xl rounded-full pointer-events-none" />
                 <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-brand-secondary/20 blur-3xl rounded-full pointer-events-none" />

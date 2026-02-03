@@ -22,7 +22,7 @@ export const TokenProvider = ({ children }) => {
             setIsValid(result.valid);
             setIsValidating(false);
 
-            if (valid) {
+            if (result.valid) {
                 localStorage.setItem('hf_token', token);
             }
         };

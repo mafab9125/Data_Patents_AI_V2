@@ -6,6 +6,14 @@ export default defineConfig({
     plugins: [react()],
     server: {
         port: 5173,
-        open: true
+        open: true,
+        proxy: {
+            '/api/hf': {
+                target: 'https://router.huggingface.co',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api\/hf/, ''),
+                secure: false // Acepta certificados autofirmados si fuera necesario, útil en dev
+            }
+        }
     }
 })

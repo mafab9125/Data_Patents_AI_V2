@@ -3,8 +3,8 @@
  * Modelo: AAUBS/PatentSBERTa_V2
  */
 
-const MODEL_ID = "AAUBS/PatentSBERTa_V2";
-const API_URL = `https://api-inference.huggingface.co/pipeline/feature-extraction/${MODEL_ID}`;
+const MODEL_ID = "BAAI/bge-small-en-v1.5";
+const API_URL = `/api/hf/hf-inference/models/${MODEL_ID}`;
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2
@@ -25,11 +25,8 @@ export const getEmbeddings = async (text, token) => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                inputs: text,
-                options: {
-                    wait_for_model: true,
-                    use_cache: true
-                },
+                inputs: [text],
+                options: { wait_for_model: true }
             }),
         });
 

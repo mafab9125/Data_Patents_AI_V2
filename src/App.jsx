@@ -9,6 +9,7 @@ import { ReportsView } from './components/ReportsView';
 import { CountryAnalysis } from './components/CountryAnalysis';
 import { Icon } from './components/Icon';
 import { INITIAL_PATENTS } from './data/patents';
+import { ReferencesModal } from './components/ReferencesModal';
 import { useSemanticSearch } from './hooks/useSemanticSearch';
 import { useToken } from './context/TokenContext';
 import clsx from 'clsx';
@@ -27,6 +28,9 @@ function App() {
     const [minScore, setMinScore] = useState(0.25);
     const [activeView, setActiveView] = useState('dashboard');
     const [showCountryAnalysis, setShowCountryAnalysis] = useState(false);
+    const [showTokenModal, setShowTokenModal] = useState(false);
+    const [showReferencesModal, setShowReferencesModal] = useState(false);
+    const [selectedPatents, setSelectedPatents] = useState(new Set());
 
     // Initial search or reset
     useEffect(() => {
@@ -34,7 +38,11 @@ function App() {
     }, [query]);
 
     const handleSearch = () => {
-        if (query.trim() && isValid) {
+        if (!isValid) {
+            setShowTokenModal(true);
+            return;
+        }
+        if (query.trim()) {
             search(query, token, minScore);
         }
     };
@@ -43,25 +51,57 @@ function App() {
         if (e.key === 'Enter') handleSearch();
     };
 
+    // Selection handlers
+    const toggleSelection = (patentId) => {
+        setSelectedPatents(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(patentId)) {
+                newSet.delete(patentId);
+            } else {
+                newSet.add(patentId);
+            }
+            return newSet;
+        });
+    };
+
+    const clearSelection = () => setSelectedPatents(new Set());
+
+    // Scroll to patent card when clicked from semantic map
+    const handleMapPatentClick = (patent) => {
+        const element = document.getElementById(`patent-${patent.id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Brief highlight effect
+            element.style.transition = 'all 0.3s';
+            element.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 300);
+        }
+    };
+
     // Calculate dynamic stats
     const activePatentsCount = results.filter(p => p.status === 'Activo').length;
 
     return (
         <div className="bg-dark-bg min-h-screen font-sans text-dark-text selection:bg-brand-primary/30">
-            <TokenModal />
+            <TokenModal isOpen={showTokenModal} onClose={() => setShowTokenModal(false)} />
+            <ReferencesModal isOpen={showReferencesModal} onClose={() => setShowReferencesModal(false)} />
 
             {showCountryAnalysis && (
                 <CountryAnalysis patents={results} onClose={() => setShowCountryAnalysis(false)} />
             )}
 
             <Sidebar
+                activeView={activeView}
+                setActiveView={setActiveView}
                 onNewSearch={() => {
                     setQuery('');
                     resetSearch();
                     setActiveView('dashboard');
                 }}
-                activeView={activeView}
-                setActiveView={setActiveView}
+                onSettingsClick={() => setShowTokenModal(true)}
+                onReferencesClick={() => setShowReferencesModal(true)}
             />
 
             <main className="ml-64 flex-1 p-8 min-h-screen relative z-0">
@@ -70,30 +110,75 @@ function App() {
 
                 {/* Header */}
                 <header className="flex justify-between items-center mb-10">
-                    <div>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">
-                            {activeView === 'dashboard' ? 'Centro de Inteligencia' :
-                                activeView === 'database' ? 'Base de Datos Maestra' : 'Reportes Ejecutivos'}
-                        </h2>
-                        <p className="text-dark-muted mt-1">
-                            {activeView === 'dashboard' ? 'Análisis semántico e insights estratégicos' : 'Gestión y exploración de activos de propiedad intelectual'}
-                        </p>
-                    </div>
+                    {activeView !== 'reports' && (
+                        <div>
+                            <h2 className="text-3xl font-bold text-white tracking-tight">
+                                {activeView === 'dashboard' ? 'Centro de Inteligencia' : 'Base de Datos Maestra'}
+                            </h2>
+                            <p className="text-dark-muted mt-1">
+                                {activeView === 'dashboard' ? 'Análisis semántico e insights estratégicos' : 'Gestión y exploración de activos de propiedad intelectual'}
+                            </p>
+                        </div>
+                    )}
+                    {activeView === 'reports' && (
+                        <div>
+                            <h2 className="text-3xl font-bold text-white tracking-tight">Reportes de Inteligencia</h2>
+                            <p className="text-dark-muted mt-1">
+                                {selectedPatents.size > 0
+                                    ? `Análisis de ${selectedPatents.size} patente${selectedPatents.size !== 1 ? 's' : ''} seleccionada${selectedPatents.size !== 1 ? 's' : ''}`
+                                    : 'Selecciona patentes para generar reportes personalizados'}
+                            </p>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+                        <a href="https://github.com/mafab9125?tab=repositories" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 pl-4 border-l border-white/10 hover:opacity-80 transition-opacity">
                             <div className="text-right hidden sm:block">
-                                <div className="text-sm font-bold text-white">Admin User</div>
-                                <div className="text-xs text-dark-muted">admin@datapatents.ai</div>
+                                <div className="text-sm font-bold text-white">mafab9125</div>
+                                <div className="text-xs text-dark-muted">GitHub User</div>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary p-[2px]">
                                 <img
-                                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                                    alt="User"
+                                    src="https://avatars.githubusercontent.com/mafab9125"
+                                    alt="mafab9125"
                                     className="w-full h-full rounded-full bg-dark-card object-cover"
                                 />
                             </div>
-                        </div>
+                        </a>
+
+                        {/* API Status Badge */}
+                        {isValid && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                                <span className="text-xs font-medium text-emerald-400">API Conectada</span>
+                            </div>
+                        )}
+
+                        {/* Selection Counter */}
+                        {selectedPatents.size > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20">
+                                <Icon name="check" size={16} className="text-brand-primary" />
+                                <span className="text-xs font-medium text-brand-primary">
+                                    {selectedPatents.size} seleccionada{selectedPatents.size !== 1 ? 's' : ''}
+                                </span>
+                                <button
+                                    onClick={clearSelection}
+                                    className="ml-1 text-brand-primary/60 hover:text-brand-primary transition-colors"
+                                    title="Limpiar selección"
+                                >
+                                    <Icon name="x" size={14} />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Settings / Token Button */}
+                        <button
+                            onClick={() => setShowTokenModal(true)}
+                            className="p-2 ml-4 hover:bg-white/5 rounded-lg text-dark-muted hover:text-white transition-colors"
+                            title="Configurar Token API"
+                        >
+                            <Icon name="settings" size={20} />
+                        </button>
                     </div>
                 </header>
 
@@ -129,7 +214,7 @@ function App() {
                                 <div className="px-4 py-2 border-t border-white/5 flex items-center justify-between text-xs">
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-dark-muted font-medium uppercase tracking-wider">Sensibilidad AI:</span>
+                                            <span className="text-dark-muted font-medium uppercase tracking-wider">Similitud Mínima:</span>
                                             <input
                                                 type="range"
                                                 min="0"
@@ -180,7 +265,7 @@ function App() {
 
                         {/* Semantic Map Placeholder */}
                         <div className="hidden md:block">
-                            <SemanticMap patents={results} />
+                            <SemanticMap patents={results} onPatentClick={handleMapPatentClick} />
                         </div>
 
                         {/* Results List */}
@@ -192,7 +277,14 @@ function App() {
 
                             <div className="grid grid-cols-1 gap-4">
                                 {results.map((patent) => (
-                                    <PatentCard key={patent.id} patent={patent} score={patent.score} />
+                                    <div key={patent.id} id={`patent-${patent.id}`}>
+                                        <PatentCard
+                                            patent={patent}
+                                            score={patent.score}
+                                            isSelected={selectedPatents.has(patent.id)}
+                                            onToggleSelection={toggleSelection}
+                                        />
+                                    </div>
                                 ))}
 
                                 {results.length === 0 && (
@@ -215,9 +307,9 @@ function App() {
                     </div>
                 )}
 
-                {activeView === 'reports' && <ReportsView />}
+                {activeView === 'reports' && <ReportsView selectedPatents={selectedPatents} allPatents={results} />}
             </main>
-        </div>
+        </div >
     );
 }
 
