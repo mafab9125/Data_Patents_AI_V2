@@ -5,9 +5,9 @@
 
 const MODEL_ID = "BAAI/bge-small-en-v1.5";
 
-// Usamos una ruta relativa que será manejada por el proxy (Vite en local, Vercel en prod)
-// Esto evita problemas de CORS y 404
-const API_URL = `/api/hf/models/${MODEL_ID}`;
+// En Vercel, el directorio /api/ se convierte automáticamente en endpoints.
+// Usamos /api/hf que conectará con nuestro hf.js
+const API_URL = "/api/hf";
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2
