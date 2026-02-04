@@ -1,12 +1,13 @@
 /**
  * Servicio para interactuar con la API de Hugging Face
- * Modelo: AAUBS/PatentSBERTa_V2
+ * Con Fallback a Modo Demo Local
  */
+import { generateLocalEmbedding } from './localEmbeddings';
 
-const MODEL_ID = "BAAI/bge-small-en-v1.5";
+const MODEL_ID = "intfloat/multilingual-e5-small";
+const USE_DEMO_MODE = true; // Cambia a false cuando la API funcione
 
-// Usamos un nombre de ruta que NO empiece por /api para evitar que Vercel se confunda
-const API_URL = "/hf-infer";
+console.log(USE_DEMO_MODE ? "🎭 Demo Mode Enabled (Local Embeddings)" : "🚀 HuggingFace API Mode");
 
 /**
  * Genera embeddings para un texto dado usando PatentSBERTa_V2
@@ -15,19 +16,33 @@ const API_URL = "/hf-infer";
  * @returns {Promise<number[]>} - El vector de embeddings
  */
 export const getEmbeddings = async (text, token) => {
-    if (!text || !token) {
-        throw new Error("Texto y token son requeridos para generar embeddings.");
+    if (!text) {
+        throw new Error("Texto es requerido para generar embeddings.");
+    }
+
+    // MODO DEMO: Genera embeddings localmente sin API
+    if (USE_DEMO_MODE) {
+        console.log("🎭 Generating local embedding for:", text.substring(0, 50) + "...");
+        // Simulamos un pequeño delay para que parezca real
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return generateLocalEmbedding(text);
+    }
+
+    // MODO API: Usa Hugging Face Router
+    if (!token) {
+        throw new Error("Token es requerido para el modo API.");
     }
 
     try {
-        const response = await fetch(API_URL, {
+        // Usamos el proxy configurado en Vite para evitar CORS
+        const response = await fetch(`/api/hf/models/${MODEL_ID}`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                inputs: [text],
+                inputs: [text],  // Envolvemos en array para forzar Feature Extraction (evita error 'missing sentences')
                 options: { wait_for_model: true }
             }),
         });
@@ -37,33 +52,38 @@ export const getEmbeddings = async (text, token) => {
             let errorMsg = response.statusText;
             try {
                 const errorData = JSON.parse(errorText);
-                errorMsg = errorData.error || errorData.message || errorMsg;
+                errorMsg = errorData.error || errorData.message || JSON.stringify(errorData);
             } catch (e) {
                 errorMsg = errorText || errorMsg;
             }
 
             if (response.status === 503) {
-                throw new Error("El modelo se está cargando (Cold Start). Por favor intenta de nuevo en unos segundos.");
+                throw new Error("El modelo se está cargando (Cold Start)... intenta en 20s.");
             }
             throw new Error(`Error API (${response.status}): ${errorMsg}`);
         }
 
         const result = await response.json();
 
-        // La API puede devolver diferentes estructuras dependiendo del input
-        // Para feature-extraction suele ser un array de números (vector) o un array de arrays (lotes)
-        if (Array.isArray(result)) {
-            // Si es un array de arrays (batch), tomamos el primero si solo enviamos un texto
-            if (Array.isArray(result[0])) {
-                return result[0];
-            }
+        // Estructura de respuesta OpenAI: { data: [{ embedding: [...] }] }
+        if (result && result.data && result.data[0] && result.data[0].embedding) {
+            return result.data[0].embedding;
+        }
+
+        // Estructura alternativa (algunos modelos en router): [0.1, 0.2...]
+        if (Array.isArray(result) && typeof result[0] === 'number') {
             return result;
         }
 
-        throw new Error("Formato de respuesta inesperado de la API.");
+        console.error("Respuesta inesperada:", result);
+        throw new Error("Formato de respuesta inesperado (OpenAI Compat).");
 
     } catch (error) {
         console.error("Error en getEmbeddings:", error);
+        // Log extra details for debugging
+        if (error.message.includes('401')) {
+            console.error("Error 401: Token inválido o permisos insuficientes.");
+        }
         throw error;
     }
 };
@@ -75,7 +95,6 @@ export const getEmbeddings = async (text, token) => {
  */
 export const validateToken = async (token) => {
     try {
-        // Intentamos una llamada dummy muy corta
         await getEmbeddings("test", token);
         return { valid: true };
     } catch (error) {

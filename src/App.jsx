@@ -11,18 +11,22 @@ import { Icon } from './components/Icon';
 import { INITIAL_PATENTS } from './data/patents';
 import { ReferencesModal } from './components/ReferencesModal';
 import { useSemanticSearch } from './hooks/useSemanticSearch';
+
 import { useToken } from './context/TokenContext';
+import { getEmbeddings } from './services/huggingFace';
 import clsx from 'clsx';
 
 function App() {
     const { token, isValid } = useToken();
+    const [patents, setPatents] = useState(INITIAL_PATENTS);
+
     const {
         results,
         isSearching,
         searchMetrics,
         search,
         resetSearch
-    } = useSemanticSearch(INITIAL_PATENTS);
+    } = useSemanticSearch(patents);
 
     const [query, setQuery] = useState('');
     const [minScore, setMinScore] = useState(0.25);
@@ -31,6 +35,7 @@ function App() {
     const [showTokenModal, setShowTokenModal] = useState(false);
     const [showReferencesModal, setShowReferencesModal] = useState(false);
     const [selectedPatents, setSelectedPatents] = useState(new Set());
+    const [isHydrating, setIsHydrating] = useState(false);
 
     // Initial search or reset
     useEffect(() => {
@@ -49,6 +54,46 @@ function App() {
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') handleSearch();
+    };
+
+    const handleVectorize = async () => {
+        if (!isValid || !token) {
+            setShowTokenModal(true);
+            return;
+        }
+
+        if (confirm(`¿Deseas vectorizar ${patents.length} patentes? Esto tomará unos segundos y usará tu Token.`)) {
+            setIsHydrating(true);
+            try {
+                // Procesamos en lotes/secuencial
+                const newPatents = [...patents];
+                let processed = 0;
+
+                for (let i = 0; i < newPatents.length; i++) {
+                    const p = newPatents[i];
+                    if (!p.embedding) {
+                        try {
+                            const textSource = `${p.title}. ${p.abstract}`;
+                            const embedding = await getEmbeddings(textSource, token);
+                            newPatents[i] = { ...p, embedding };
+                            processed++;
+
+                            if (processed % 5 === 0) setPatents([...newPatents]);
+                        } catch (err) {
+                            console.error(`Error vectorizando patente ${p.id}:`, err);
+                        }
+                    }
+                }
+
+                setPatents(newPatents);
+                alert(`Proceso completado. ${processed} nuevas patentes vectorizadas.`);
+            } catch (error) {
+                console.error("Error global en vectorización:", error);
+                alert("Ocurrió un error durante la vectorización.");
+            } finally {
+                setIsHydrating(false);
+            }
+        }
     };
 
     // Selection handlers
@@ -150,31 +195,34 @@ function App() {
                         {isValid && (
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                                <span className="text-xs font-medium text-emerald-400">API Conectada</span>
+                                <span className="text-xs font-medium text-emerald-400">Conectado</span>
                             </div>
                         )}
 
-                        {/* Selection Counter */}
-                        {selectedPatents.size > 0 && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20">
-                                <Icon name="check" size={16} className="text-brand-primary" />
-                                <span className="text-xs font-medium text-brand-primary">
-                                    {selectedPatents.size} seleccionada{selectedPatents.size !== 1 ? 's' : ''}
-                                </span>
-                                <button
-                                    onClick={clearSelection}
-                                    className="ml-1 text-brand-primary/60 hover:text-brand-primary transition-colors"
-                                    title="Limpiar selección"
-                                >
-                                    <Icon name="x" size={14} />
-                                </button>
-                            </div>
-                        )}
+                        {/* BOTÓN VECTORIZAR (Explicit Request) */}
+                        <button
+                            onClick={handleVectorize}
+                            disabled={isHydrating}
+                            className="bg-brand-primary/20 hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/50 px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ml-4 mb-0"
+                            style={{ boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)" }}
+                        >
+                            {isHydrating ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <span>Vectorizando ({Math.round((patents.filter(p => !!p.embedding).length / patents.length) * 100)}%)...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Icon name="database" size={16} />
+                                    <span>VECTORIZAR DATOS</span>
+                                </>
+                            )}
+                        </button>
 
                         {/* Settings / Token Button */}
                         <button
                             onClick={() => setShowTokenModal(true)}
-                            className="p-2 ml-4 hover:bg-white/5 rounded-lg text-dark-muted hover:text-white transition-colors"
+                            className="p-2 ml-2 hover:bg-white/5 rounded-lg text-dark-muted hover:text-white transition-colors"
                             title="Configurar Token API"
                         >
                             <Icon name="settings" size={20} />
@@ -184,6 +232,8 @@ function App() {
 
                 {activeView === 'dashboard' && (
                     <div className="space-y-8 animate-fade-in">
+
+
                         {/* Search Section */}
                         <div className="relative z-10 max-w-4xl mx-auto">
                             <div className="bg-dark-card/80 backdrop-blur-xl p-1 rounded-2xl shadow-2xl border border-white/10 flex flex-col gap-0">
@@ -257,9 +307,10 @@ function App() {
                             />
                             <StatCard
                                 icon="filetext"
-                                value="PatentSBERTa_V2"
-                                label="Modelo de Inferencia"
-                                subtext="Transformer Based"
+                                value={`${patents.filter(p => !!p.embedding).length} / ${patents.length}`}
+                                label="Patentes Vectorizadas"
+                                subtext="Click para analizar DB"
+                                onClick={handleVectorize}
                             />
                         </div>
 
@@ -303,7 +354,13 @@ function App() {
 
                 {activeView === 'database' && (
                     <div className="bg-dark-card rounded-2xl p-1 overflow-hidden border border-dark-border">
-                        <DatabaseView patents={results} onImport={() => { }} onClear={() => { }} />
+                        <DatabaseView
+                            patents={patents}
+                            onImport={(newPatents) => setPatents(prev => [...prev, ...newPatents])}
+                            onClear={() => setPatents([])}
+                            onVectorize={handleVectorize}
+                            isHydrating={isHydrating}
+                        />
                     </div>
                 )}
 

@@ -6,13 +6,13 @@ export default defineConfig({
     plugins: [react()],
     server: {
         port: 5173,
-        open: true,
+        strictPort: true,
         proxy: {
-            '/hf-infer': {
-                target: 'https://router.huggingface.co/models/BAAI/bge-small-en-v1.5',
+            '/api/hf': {
+                target: 'https://router.huggingface.co',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/hf-infer/, ''),
-                secure: false
+                rewrite: (path) => path.replace(/^\/api\/hf/, ''),
+                secure: true
             }
         }
     }

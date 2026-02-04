@@ -33,41 +33,38 @@ export const useSemanticSearch = (initialPatents = []) => {
 
         try {
             let queryEmbedding;
-            let source = 'API';
+            let source = 'API (PatentSBERTa)';
 
             // 1. Obtener Embedding del Query
             if (queryCache[query]) {
                 queryEmbedding = queryCache[query];
                 source = 'Cache';
             } else {
-                if (!token) throw new Error("Token no configurado");
+                if (!token) throw new Error("Token no configurado. Por favor ingresa tu token de Hugging Face.");
                 queryEmbedding = await getEmbeddings(query, token);
                 setQueryCache(prev => ({ ...prev, [query]: queryEmbedding }));
             }
 
             // 2. Calcular Similitud con Patentes
-            // NOTA: Idealmente las patentes ya deberían tener embeddings pre-calculados.
-            // Si no los tienen, en un escenario real esto fallaría o requeriría calcularlos al vuelo (lento y costoso).
-            // Para este prototipo, asumiremos que si NO tienen embedding, simulamos un score basado en texto 
-            // O generamos uno dummy si es demo.
-
             const scoredResults = initialPatents.map(patent => {
                 let score = 0;
 
-                if (patent.embedding) {
+                if (patent.embedding && Array.isArray(patent.embedding)) {
                     // Comparación Vectorial Real
                     score = cosineSimilarity(queryEmbedding, patent.embedding);
                 } else {
-                    // Fallback: Si la patente no tiene embedding (caso inicial),
-                    // usamos una heurística de texto simple temporalmente
-                    // OJO: En la fase de data, actualizaremos esto.
-                    const text = `${patent.title} ${patent.abstract} ${patent.claims}`.toLowerCase();
+                    // Fallback: Si la patente no tiene embedding en el dataset
+                    // Usamos Keyword Matching mejorado como fallback temporal
+                    const text = `${patent.title} ${patent.abstract} ${patent.claims || ''}`.toLowerCase();
                     const q = query.toLowerCase();
-                    if (text.includes(q)) score = 0.5;
-                    // Boost por palabras clave
-                    const words = q.split(' ');
-                    const matchCount = words.filter(w => text.includes(w)).length;
-                    score += (matchCount / words.length) * 0.4;
+
+                    if (text.includes(q)) score = 0.5; // Base score por match exacto
+
+                    const words = q.split(' ').filter(w => w.length > 3);
+                    if (words.length > 0) {
+                        const matchCount = words.filter(w => text.includes(w)).length;
+                        score += (matchCount / words.length) * 0.4;
+                    }
                 }
 
                 return { ...patent, score };
@@ -88,13 +85,21 @@ export const useSemanticSearch = (initialPatents = []) => {
         } catch (err) {
             console.error("Search error:", err);
             setError(err.message);
+
             // Fallback a búsqueda simple si falla la API
-            const textResults = initialPatents.filter(p =>
-                (p.title + p.abstract).toLowerCase().includes(query.toLowerCase())
-            ).map(p => ({ ...p, score: 0.1 })); // Score bajo indicando keyword match
+            // Mantenemos al usuario informado de que es un fallback
+            const textResults = initialPatents.map(p => {
+                const text = (p.title + p.abstract).toLowerCase();
+                const q = query.toLowerCase();
+                let score = 0;
+                if (text.includes(q)) score = 0.3;
+                return { ...p, score };
+            })
+                .sort((a, b) => b.score - a.score)
+                .filter(p => p.score > 0);
 
             setResults(textResults);
-            setSearchMetrics({ time: '0s', source: 'Offline Fallback' });
+            setSearchMetrics({ time: '0s', source: 'ERROR - Usando Fallback Local' });
         } finally {
             setIsSearching(false);
         }
@@ -103,6 +108,7 @@ export const useSemanticSearch = (initialPatents = []) => {
     const resetSearch = () => {
         setResults(initialPatents);
         setError(null);
+        setSearchMetrics({ time: '0s', source: 'Local' });
     };
 
     return {

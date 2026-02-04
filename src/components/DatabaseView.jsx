@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-export const DatabaseView = ({ patents, onImport, onClear }) => {
+export const DatabaseView = ({ patents, onImport, onClear, onVectorize, isHydrating }) => {
     const fileInputRef = useRef(null);
 
     const handleFileUpload = (e) => {
@@ -29,6 +29,20 @@ export const DatabaseView = ({ patents, onImport, onClear }) => {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">Inventario de Patentes</h2>
                 <div className="flex gap-2">
+                    <button
+                        onClick={onVectorize}
+                        disabled={isHydrating}
+                        className="flex items-center gap-2 px-4 py-2 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-lg hover:bg-brand-primary/20 transition-colors font-semibold text-sm disabled:opacity-50"
+                    >
+                        {isHydrating ? (
+                            <>
+                                <div className="w-3 h-3 rounded-full border-2 border-brand-primary border-t-transparent animate-spin"></div>
+                                Vectorizando...
+                            </>
+                        ) : (
+                            'Vectorizar DB'
+                        )}
+                    </button>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -83,8 +97,8 @@ export const DatabaseView = ({ patents, onImport, onClear }) => {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-lg text-xs font-bold border ${p.status === 'Activo' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                p.status === 'Pendiente' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                            p.status === 'Pendiente' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                                'bg-slate-500/10 text-slate-400 border-slate-500/20'
                                             }`}>
                                             {p.status}
                                         </span>
