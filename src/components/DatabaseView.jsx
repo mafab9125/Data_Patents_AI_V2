@@ -1,4 +1,45 @@
 import { useRef } from 'react';
+import * as XLSX from 'xlsx';
+
+const mapRowToPatent = (row, index) => {
+    const get = (...keys) => {
+        for (const key of keys) {
+            const val = row[key];
+            if (val !== undefined && val !== null && val !== '') return String(val);
+        }
+        return null;
+    };
+
+    const rawId = get('Mostrar clave', 'ID', 'id', 'No.', '#');
+    const id = rawId ? rawId.replace(/\s+/g, '') : `EXCEL-${index + 1}`;
+
+    let dateStr = new Date().toISOString().split('T')[0];
+    const rawDate = get('Fecha de publicación', 'Fecha', 'fecha', 'Date', 'date');
+    if (rawDate) {
+        try {
+            const parsed = new Date(rawDate);
+            if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0];
+        } catch (e) { /* keep default */ }
+    }
+
+    const rawTags = get('Tags', 'tags', 'Etiquetas', 'etiquetas');
+    const tags = rawTags ? rawTags.split(/[,;]/).map(t => t.trim()).filter(Boolean) : [];
+
+    return {
+        id,
+        title: get('Título', 'Titulo', 'titulo', 'Title', 'title') || 'Sin Título',
+        abstract: get('Resumen', 'resumen', 'Abstract', 'abstract') || 'No abstract available.',
+        assignee: get('Solicitantes', 'solicitantes', 'Assignee', 'assignee') || 'Unknown Assignee',
+        date: dateStr,
+        country: get('CODE', 'code', 'Country', 'country', 'País', 'Pais', 'pais') || 'UN',
+        status: get('Estado', 'estado', 'Status', 'status') || 'Activo',
+        score: 0,
+        url: get('URL_ESPACENET', 'URL_LENS', 'URL', 'url') || null,
+        ipc: get('IPC', 'IPCR', 'ipc') || null,
+        cpc: get('CPC', 'cpc') || null,
+        tags,
+    };
+};
 
 export const DatabaseView = ({ patents, onImport, onClear, onVectorize, isHydrating }) => {
     const fileInputRef = useRef(null);
@@ -6,22 +47,46 @@ export const DatabaseView = ({ patents, onImport, onClear, onVectorize, isHydrat
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        // Reset input so same file can be re-selected
+        e.target.value = '';
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const jsonData = JSON.parse(event.target.result);
-                if (Array.isArray(jsonData)) {
-                    onImport(jsonData);
-                } else {
-                    alert("El formato del JSON es incorrecto. Debe ser una lista de patentes.");
+        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+        if (isExcel) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const workbook = XLSX.read(event.target.result, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    if (!rows.length) {
+                        alert("El archivo Excel está vacío o no tiene datos en la primera hoja.");
+                        return;
+                    }
+                    onImport(rows.map(mapRowToPatent));
+                } catch (err) {
+                    console.error(err);
+                    alert("Error al leer el archivo Excel.");
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Error al leer el archivo JSON.");
-            }
-        };
-        reader.readAsText(file);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const jsonData = JSON.parse(event.target.result);
+                    if (Array.isArray(jsonData)) {
+                        onImport(jsonData);
+                    } else {
+                        alert("El formato del JSON es incorrecto. Debe ser una lista de patentes.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error al leer el archivo JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
     };
 
     return (
@@ -47,7 +112,7 @@ export const DatabaseView = ({ patents, onImport, onClear, onVectorize, isHydrat
                         type="file"
                         ref={fileInputRef}
                         onChange={handleFileUpload}
-                        accept=".json"
+                        accept=".json,.xlsx,.xls"
                         className="hidden"
                     />
                     <button
@@ -60,7 +125,7 @@ export const DatabaseView = ({ patents, onImport, onClear, onVectorize, isHydrat
                         onClick={() => fileInputRef.current.click()}
                         className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-colors font-semibold text-sm"
                     >
-                        Importar JSON
+                        Importar (JSON / Excel)
                     </button>
                     <div className="bg-brand-primary/20 text-brand-primary px-3 py-2 rounded-lg text-xs font-mono border border-brand-primary/20">
                         {patents.length} registros
